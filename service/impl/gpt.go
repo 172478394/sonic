@@ -33,6 +33,34 @@ func NewGPTService(conf *config.Config) service.GPTService {
     }
 }
 
+func (g *gptServiceImpl) GenKeywords(ctx context.Context) ([]dto.Keyword, error) {
+    keywordPrompt := "I want you to act as a market research expert that speaks and writes fluent Chinese. Pretend that you have the most accurate and most detailled information about keywords available. Pretend that you are able to develop a full SEO content plan in fluent Chinese. I will give you the target keyword %s. From this keyword create a markdown table with a keyword list for an SEO content strategy plan on the topic %s. This form is required to have 20 records. Cluster the keywords according to the top 100 super categories, Randomly select categories from these 100 categories without sorting them in order each time, and name the super category in the first column called Tag. Add in another column with 7 subcategories for each keyword cluster or specific long-tail keywords for each of the clusters. Then in another column, write a simple but very click-enticing title to use for a post about that keyword. Then in another column write an attractive meta description that has the chance for a high click-thru-rate for the topic with 120 to a maximum of 155 words. The meta description shall be value based, so mention value of the article and have a simple call to action to cause the searcher to click. Do NOT under any circumstance use too generic keyword like `introduction`  or `conclusion` or `tl:dr`. Focus on the most specific keywords only. Do not use single quotes, double quotes or any other enclosing characters in any of the columns you fill in. Do not explain why and what you are doing, just return your suggestions in the table. The markdown table shall be in Chinese language and have the following columns:  TAG, keyword,  title, meta description."
+    categoryMap := map[int]string{
+        2: "星座",
+        3: "风水",
+        4: "解梦",
+        5: "取名",
+    }
+    for categoryId, categoryName := range categoryMap {
+        var request api.Request
+        request.Temperature = 0.75
+        request.Messages = []*api.ChatCompletionMessage{
+            //{
+            //    Role:    "system",
+            //    Content: systemPrompt,
+            //},
+            {
+                Role:    "user",
+                Content: fmt.Sprintf(keywordPrompt, categoryName, categoryName),
+            },
+        }
+        resp, _err := g.client.Completion(ctx, &request)
+        if _err != nil {
+            return nil, _err
+        }
+    }
+}
+
 func (g *gptServiceImpl) GenContent(ctx context.Context) ([]param.Post, error) {
     fileName := "./keywords/" + time.Now().Local().Format("2006-01-02") + ".json"
     if !util.FileIsExisted(fileName) {
@@ -67,7 +95,7 @@ func (g *gptServiceImpl) GenContent(ctx context.Context) ([]param.Post, error) {
         }
         resp, _err := g.client.Completion(ctx, &request)
         if _err != nil {
-            return nil, err
+            return nil, _err
         }
         //log.Debug("resp:", zap.String("content", resp.Choices[0].Message.Content))
         postParam := param.Post{
@@ -77,6 +105,7 @@ func (g *gptServiceImpl) GenContent(ctx context.Context) ([]param.Post, error) {
             OriginalContent: resp.Choices[0].Message.Content,
             Content:         util.Bytes2str(blackfriday.Run(util.Str2bytes(resp.Choices[0].Message.Content))),
             CategoryIDs:     data.Category,
+            TagIDs:          data.TagIds,
             MetaKeywords:    data.Keyword,
             MetaDescription: data.MetaDescription,
         }

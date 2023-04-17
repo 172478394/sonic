@@ -13,8 +13,8 @@ func StartGenContent(postService service.PostService, gptService service.GPTServ
     // 获取当前时间
     now := time.Now()
     // 计算下一个0点的时间
-    next := now.Add(time.Second * 24)
-    //next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location())
+    next := now.Add(time.Hour * 24)
+    next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location())
 
     // 计算等待时间
     t := time.NewTimer(next.Sub(now))
