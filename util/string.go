@@ -1,6 +1,8 @@
 package util
 
-import "unsafe"
+import (
+    "unsafe"
+)
 
 func Str2bytes(s string) []byte {
     x := (*[2]uintptr)(unsafe.Pointer(&s))
