@@ -18,27 +18,29 @@ func StartGenContent(gptService service.GPTService) {
 
     ctx := context.TODO()
     go func() {
-        // 获取当前时间
-        now := time.Now()
-        // 计算下一个0点的时间
-        next := now.Add(time.Hour * 24)
-        next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location())
+        for {
+            // 获取当前时间
+            now := time.Now()
+            // 计算下一个0点的时间
+            next := now.Add(time.Hour * 24)
+            next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location())
 
-        // 计算等待时间
-        t := time.NewTimer(next.Sub(now))
-        // 等待时间到达时执行任务
-        <-t.C
-        // 执行任务
-        for i := 0; i < 5; i++ {
-            for categoryId, categoryName := range categoryMap {
-                keywords, err := gptService.GenKeywords(ctx, categoryName, categoryId)
-                if err != nil {
-                    log.Error("gen keywords error", zap.Error(err))
-                    continue
+            // 计算等待时间
+            t := time.NewTimer(next.Sub(now))
+            // 等待时间到达时执行任务
+            <-t.C
+            // 执行任务
+            for i := 0; i < 3; i++ {
+                for categoryId, categoryName := range categoryMap {
+                    keywords, err := gptService.GenKeywords(ctx, categoryName, categoryId)
+                    if err != nil {
+                        log.Error("gen keywords error", zap.Error(err))
+                        continue
+                    }
+                    _ = gptService.GenContent(ctx, keywords)
                 }
-                _ = gptService.GenContent(ctx, keywords)
             }
+            log.Debug("文章生成完毕，等待下一次执行")
         }
-        log.Debug("文章生成完毕，等待下一次执行")
     }()
 }
