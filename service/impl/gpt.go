@@ -19,6 +19,7 @@ import (
     "github.com/russross/blackfriday/v2"
     "go.uber.org/zap"
     "gorm.io/gorm"
+    "regexp"
     "strings"
     "time"
 )
@@ -93,6 +94,11 @@ func (g *gptServiceImpl) GenKeywords(ctx context.Context, categoryName string, c
                 continue
             }
         }
+        // 匹配非中文字符的模式
+        pattern := regexp.MustCompile(`[^\p{Han}]`)
+
+        // 使用正则表达式替换匹配到的非中文字符为空串
+        tagName = pattern.ReplaceAllString(tagName, "")
         existTag, err := g.TagService.GetByNameLike(ctx, fmt.Sprintf("%%%s%%", tagName))
         if err != nil {
             if existTag == nil || errors.Is(err, gorm.ErrRecordNotFound) {
@@ -145,7 +151,7 @@ func (g *gptServiceImpl) GenContent(ctx context.Context, keywords []dto.Keyword)
         postParam := param.Post{
             Title:           data.Title,
             Status:          consts.PostStatusPublished,
-            Slug:            fmt.Sprintf("article-%s", time.Now().Local().Format("20060102030405")),
+            Slug:            fmt.Sprintf("article-%s", time.Now().Local().Format("20060102150405")),
             OriginalContent: resp.Choices[0].Message.Content,
             Content:         util.Bytes2str(blackfriday.Run(util.Str2bytes(resp.Choices[0].Message.Content))),
             CategoryIDs:     data.Category,

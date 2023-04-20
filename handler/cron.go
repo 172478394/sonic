@@ -23,7 +23,7 @@ func StartGenContent(gptService service.GPTService) {
             now := time.Now()
             // 计算下一个0点的时间
             next := now.Add(time.Hour * 24)
-            next = time.Date(next.Year(), next.Month(), next.Day(), 0, 0, 0, 0, next.Location())
+            next = time.Date(next.Year(), next.Month(), next.Day(), 4, 0, 0, 0, next.Location())
 
             // 计算等待时间
             t := time.NewTimer(next.Sub(now))
