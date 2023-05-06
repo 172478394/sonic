@@ -30,7 +30,7 @@ func StartGenContent(gptService service.GPTService) {
             // 等待时间到达时执行任务
             <-t.C
             // 执行任务
-            for i := 0; i < 3; i++ {
+            for i := 0; i < 2; i++ {
                 for categoryId, categoryName := range categoryMap {
                     keywords, err := gptService.GenKeywords(ctx, categoryName, categoryId)
                     if err != nil {
